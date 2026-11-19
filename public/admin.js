@@ -7,6 +7,12 @@ const codeInput = document.getElementById("scriptCode");
 const search = document.getElementById("adminSearch");
 const errorBox = document.getElementById("adminError");
 
+const settingsForm = document.getElementById("settingsForm");
+const siteNameInput = document.getElementById("siteNameInput");
+const siteLogoInput = document.getElementById("siteLogoInput");
+const settingsMessage = document.getElementById("settingsMessage");
+const logoPreview = document.getElementById("logoPreview");
+
 let scripts = [];
 
 function esc(v) {
@@ -20,6 +26,7 @@ async function api(url, options = {}) {
     ...options,
     headers: { "Content-Type": "application/json", ...(options.headers || {}) }
   });
+
   const data = await res.json().catch(() => ({}));
 
   if (res.status === 401) {
@@ -30,6 +37,76 @@ async function api(url, options = {}) {
   if (!res.ok) throw new Error(data.error || "حدث خطأ.");
   return data;
 }
+
+function showLogo(element, url, fallback = "D") {
+  element.replaceChildren();
+
+  if (url) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "شعار الموقع";
+    img.onerror = () => {
+      element.textContent = fallback;
+    };
+    element.appendChild(img);
+  } else {
+    element.textContent = fallback;
+  }
+}
+
+async function loadSettings() {
+  try {
+    const settings = await api("/api/settings");
+
+    siteNameInput.value = settings.siteName || "Delta Scripts";
+    siteLogoInput.value = settings.logo || "";
+
+    document.getElementById("adminSiteName").textContent =
+      settings.siteName || "Delta Scripts";
+
+    document.title = `لوحة التحكم | ${settings.siteName || "Delta Scripts"}`;
+
+    showLogo(document.getElementById("adminLogo"), settings.logo, "D");
+    showLogo(logoPreview, settings.logo, "D");
+  } catch (e) {
+    settingsMessage.textContent = e.message;
+  }
+}
+
+siteLogoInput.addEventListener("input", () => {
+  const url = siteLogoInput.value.trim();
+
+  if (url.startsWith("https://")) {
+    showLogo(logoPreview, url, "D");
+  } else {
+    showLogo(logoPreview, "", "D");
+  }
+});
+
+settingsForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  settingsMessage.textContent = "جارٍ حفظ الإعدادات...";
+
+  try {
+    const settings = await api("/api/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        siteName: siteNameInput.value.trim(),
+        logo: siteLogoInput.value.trim()
+      })
+    });
+
+    document.getElementById("adminSiteName").textContent = settings.siteName;
+    document.title = `لوحة التحكم | ${settings.siteName}`;
+
+    showLogo(document.getElementById("adminLogo"), settings.logo, "D");
+    showLogo(logoPreview, settings.logo, "D");
+
+    settingsMessage.textContent = "تم حفظ الإعدادات بنجاح ✓";
+  } catch (e) {
+    settingsMessage.textContent = e.message;
+  }
+});
 
 function updateStats() {
   const total = scripts.length;
@@ -169,4 +246,5 @@ api("/api/admin/status")
   })
   .catch(() => location.href = "/");
 
+loadSettings();
 load();
