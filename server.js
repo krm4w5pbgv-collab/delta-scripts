@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -26,12 +27,18 @@ fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(path.join(dataDir, "catalog.sqlite"));
 db.pragma("journal_mode = WAL");
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS scripts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     url TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
   );
 `);
 
@@ -44,7 +51,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'"],
-      imgSrc: ["'self'", "data:"],
+      imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: isProd ? [] : null
@@ -53,6 +60,7 @@ app.use(helmet({
 }));
 
 app.use(express.json({ limit: "100kb" }));
+
 app.use(session({
   store: new SQLiteStore({ db: "sessions.sqlite", dir: dataDir, concurrentDB: true }),
   secret: process.env.SESSION_SECRET,
@@ -95,6 +103,51 @@ function validScript(name, code) {
     code.length <= 50000;
 }
 
+function getSetting(key, fallback = "") {
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key);
+  return row ? row.value : fallback;
+}
+
+app.get("/api/settings", (req, res) => {
+  res.json({
+    siteName: getSetting("siteName", "Delta Scripts"),
+    logo: getSetting("logo", "")
+  });
+});
+
+app.put("/api/settings", requireAdmin, (req, res) => {
+  const { siteName, logo } = req.body || {};
+
+  if (
+    typeof siteName !== "string" ||
+    siteName.trim().length < 1 ||
+    siteName.trim().length > 50
+  ) {
+    return res.status(400).json({ error: "اسم الموقع يجب أن يكون من 1 إلى 50 حرفاً." });
+  }
+
+  if (
+    typeof logo !== "string" ||
+    logo.length > 2000 ||
+    (logo.trim() && !/^https:\/\/[^\s]+$/i.test(logo.trim()))
+  ) {
+    return res.status(400).json({ error: "رابط الشعار يجب أن يكون رابط صورة يبدأ بـ https." });
+  }
+
+  const save = db.prepare(
+    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+  );
+
+  const transaction = db.transaction(() => {
+    save.run("siteName", siteName.trim());
+    save.run("logo", logo.trim());
+  });
+
+  transaction();
+
+  res.json({ ok: true });
+});
+
 app.get("/api/scripts", (req, res) => {
   const rows = db.prepare(
     "SELECT id, name, url AS code FROM scripts ORDER BY id DESC"
@@ -107,7 +160,9 @@ app.post("/api/login", loginLimiter, (req, res, next) => {
   const ok = safeEqual(username || "", process.env.ADMIN_USERNAME) &&
     safeEqual(password || "", process.env.ADMIN_PASSWORD) &&
     safeEqual(pin || "", process.env.ADMIN_PIN);
+
   if (!ok) return res.status(401).json({ error: "بيانات الدخول غير صحيحة." });
+
   req.session.regenerate(err => {
     if (err) return next(err);
     req.session.isAdmin = true;
@@ -131,11 +186,14 @@ app.get("/api/admin/status", (req, res) => {
 
 app.post("/api/scripts", requireAdmin, (req, res) => {
   const { name, code } = req.body || {};
+
   if (!validScript(name, code)) {
     return res.status(400).json({ error: "تحقق من الاسم والكود. الحد الأقصى للكود 50000 حرف." });
   }
+
   const info = db.prepare("INSERT INTO scripts (name, url) VALUES (?, ?)")
     .run(name.trim(), code);
+
   res.status(201).json(
     db.prepare("SELECT id, name, url AS code FROM scripts WHERE id = ?")
       .get(info.lastInsertRowid)
@@ -145,19 +203,27 @@ app.post("/api/scripts", requireAdmin, (req, res) => {
 app.put("/api/scripts/:id", requireAdmin, (req, res) => {
   const id = Number(req.params.id);
   const { name, code } = req.body || {};
+
   if (!Number.isInteger(id) || id < 1 || !validScript(name, code)) {
     return res.status(400).json({ error: "البيانات غير صحيحة." });
   }
+
   const result = db.prepare("UPDATE scripts SET name = ?, url = ? WHERE id = ?")
     .run(name.trim(), code, id);
+
   if (!result.changes) return res.status(404).json({ error: "السكربت غير موجود." });
   res.json({ ok: true });
 });
 
 app.delete("/api/scripts/:id", requireAdmin, (req, res) => {
   const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: "معرّف غير صحيح." });
+
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "معرّف غير صحيح." });
+  }
+
   const result = db.prepare("DELETE FROM scripts WHERE id = ?").run(id);
+
   if (!result.changes) return res.status(404).json({ error: "السكربت غير موجود." });
   res.json({ ok: true });
 });
