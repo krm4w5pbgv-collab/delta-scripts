@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4faff">
+  <title>لوحة الأدمن | Delta Scripts</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">D</span><span>Delta <b>Scripts</b></span></a>
+    <div class="top-actions"><span class="admin-chip">لوحة الأدمن</span><button class="button button-outline" id="logoutBtn">تسجيل الخروج</button></div>
+  </header>
+  <main class="admin-main">
+    <div class="admin-welcome"><div><span class="eyebrow">إدارة المكتبة</span><h1>لوحة التحكم</h1><p class="muted">أضف السكربتات وعدّلها أو احذفها.</p></div><a class="button button-outline" href="/">عرض الموقع</a></div>
+    <section class="admin-panel">
+      <h2 id="editorTitle">إضافة سكربت جديد</h2>
+      <form id="scriptForm" class="script-form">
+        <input type="hidden" id="scriptId">
+        <label>اسم السكربت<input id="scriptName" maxlength="90" required placeholder="مثال: اسم السكربت"></label>
+        <label>رابط السكربت<input id="scriptUrl" type="url" required placeholder="https://example.com/script"></label>
+        <div class="form-actions"><button class="button button-primary" type="submit" id="saveBtn">إضافة السكربت</button><button class="button button-soft hidden" type="button" id="cancelEdit">إلغاء التعديل</button></div>
+      </form>
+    </section>
+    <section class="admin-panel">
+      <div class="list-heading"><div><h2>السكربتات المضافة</h2><p class="muted" id="adminCount">0 سكربت</p></div><input class="admin-search" id="adminSearch" type="search" placeholder="ابحث في السكربتات..."></div>
+      <div id="adminScripts" class="admin-list"><div class="empty-state">جارٍ التحميل...</div></div>
+    </section>
+    <p class="form-error" id="adminError"></p>
+  </main>
+  <script src="/admin.js" defer></script>
+</body>
+</html>
