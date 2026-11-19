@@ -6,6 +6,25 @@ const modal = document.getElementById("loginModal");
 
 let scripts = [];
 
+const DEFAULT_COLORS = {
+  background: "#f6fbff",
+  card: "#ffffff",
+  button: "#78c8f4",
+  text: "#172638",
+  topbar: "#ffffff"
+};
+
+function applyTheme(colors = {}) {
+  const root = document.documentElement;
+  const c = { ...DEFAULT_COLORS, ...colors };
+
+  root.style.setProperty("--bg", c.background);
+  root.style.setProperty("--white", c.card);
+  root.style.setProperty("--blue", c.button);
+  root.style.setProperty("--ink", c.text);
+  root.style.setProperty("--topbar-color", c.topbar);
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;",
@@ -40,6 +59,10 @@ async function loadSettings() {
     if (!res.ok) throw new Error("فشل تحميل الإعدادات");
 
     const settings = await res.json();
+
+    // تطبيق ألوان الموقع المحفوظة
+    applyTheme(settings.colors);
+
     const siteName = settings.siteName || "Delta Scripts";
 
     const brandName = document.getElementById("siteName");
@@ -50,6 +73,7 @@ async function loadSettings() {
 
     document.title = siteName;
   } catch (error) {
+    applyTheme(DEFAULT_COLORS);
     console.error("تعذّر تحميل إعدادات الموقع:", error);
   }
 }
