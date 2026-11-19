@@ -13,18 +13,40 @@
     <div class="top-actions"><span class="admin-chip">لوحة الأدمن</span><button class="button button-outline" id="logoutBtn">تسجيل الخروج</button></div>
   </header>
   <main class="admin-main">
-    <div class="admin-welcome"><div><span class="eyebrow">إدارة المكتبة</span><h1>لوحة التحكم</h1><p class="muted">أضف السكربتات وعدّلها أو احذفها.</p></div><a class="button button-outline" href="/">عرض الموقع</a></div>
+    <div class="admin-welcome">
+      <div>
+        <span class="eyebrow">إدارة المكتبة</span>
+        <h1>لوحة التحكم</h1>
+        <p class="muted">أضف السكربتات وعدّلها أو احذفها.</p>
+      </div>
+      <a class="button button-outline" href="/">عرض الموقع</a>
+    </div>
+
     <section class="admin-panel">
       <h2 id="editorTitle">إضافة سكربت جديد</h2>
       <form id="scriptForm" class="script-form">
         <input type="hidden" id="scriptId">
-        <label>اسم السكربت<input id="scriptName" maxlength="90" required placeholder="مثال: اسم السكربت"></label>
-        <label>رابط السكربت<input id="scriptUrl" type="url" required placeholder="https://example.com/script"></label>
-        <div class="form-actions"><button class="button button-primary" type="submit" id="saveBtn">إضافة السكربت</button><button class="button button-soft hidden" type="button" id="cancelEdit">إلغاء التعديل</button></div>
+        <label>اسم السكربت
+          <input id="scriptName" maxlength="90" required placeholder="مثال: اسم السكربت">
+        </label>
+        <label>كود السكربت
+          <textarea id="scriptCode" required rows="12" maxlength="50000" dir="ltr" spellcheck="false" placeholder="الصق كود السكربت هنا..."></textarea>
+        </label>
+        <div class="form-actions">
+          <button class="button button-primary" type="submit" id="saveBtn">إضافة السكربت</button>
+          <button class="button button-soft hidden" type="button" id="cancelEdit">إلغاء التعديل</button>
+        </div>
       </form>
     </section>
+
     <section class="admin-panel">
-      <div class="list-heading"><div><h2>السكربتات المضافة</h2><p class="muted" id="adminCount">0 سكربت</p></div><input class="admin-search" id="adminSearch" type="search" placeholder="ابحث في السكربتات..."></div>
+      <div class="list-heading">
+        <div>
+          <h2>السكربتات المضافة</h2>
+          <p class="muted" id="adminCount">0 سكربت</p>
+        </div>
+        <input class="admin-search" id="adminSearch" type="search" placeholder="ابحث في السكربتات...">
+      </div>
       <div id="adminScripts" class="admin-list"><div class="empty-state">جارٍ التحميل...</div></div>
     </section>
     <p class="form-error" id="adminError"></p>
