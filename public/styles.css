@@ -71,3 +71,60 @@
     padding: 17px;
   }
 }
+
+/* Site Logo */
+.brand-mark {
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-mark img,
+.logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+.logo-preview {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eaf5fc;
+  color: #338fc3;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.logo-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.settings-form {
+  margin-top: 16px;
+}
+
+.settings-form label {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.settings-form input {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  margin-top: 7px;
+  border: 1px solid #dce8f0;
+  border-radius: 11px;
+  background: #fbfdff;
+  color: var(--ink);
+}
