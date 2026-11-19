@@ -32,6 +32,7 @@
 
     <section class="admin-panel">
       <h2>إعدادات الموقع</h2>
+
       <form id="settingsForm" class="script-form settings-form">
         <label>اسم الموقع الجديد
           <input id="siteNameInput" maxlength="50" required placeholder="اكتب اسم الموقع">
@@ -49,8 +50,69 @@
         <div class="form-actions">
           <button class="button button-primary" type="submit">حفظ الإعدادات</button>
         </div>
+
         <p class="form-error" id="settingsMessage"></p>
       </form>
+    </section>
+
+    <section class="admin-panel">
+      <h2>تخصيص ألوان الموقع</h2>
+      <p class="muted">غيّر الألوان وشاهد المعاينة قبل الحفظ. التغييرات المحفوظة تظهر لجميع الزوار.</p>
+
+      <div class="script-form">
+        <div class="color-settings-grid">
+
+          <label class="color-setting">
+            لون خلفية الموقع
+            <input type="color" id="colorBackground" value="#f6fbff">
+          </label>
+
+          <label class="color-setting">
+            لون البطاقات
+            <input type="color" id="colorCard" value="#ffffff">
+          </label>
+
+          <label class="color-setting">
+            لون الأزرار
+            <input type="color" id="colorButton" value="#78c8f4">
+          </label>
+
+          <label class="color-setting">
+            لون النصوص
+            <input type="color" id="colorText" value="#172638">
+          </label>
+
+          <label class="color-setting">
+            لون الشريط العلوي
+            <input type="color" id="colorTopbar" value="#ffffff">
+          </label>
+
+        </div>
+
+        <div class="color-live-preview" id="colorLivePreview">
+          <div class="color-preview-topbar">Delta Scripts</div>
+          <div class="color-preview-content">
+            <h3>معاينة شكل الموقع</h3>
+            <p>هذا مثال على شكل النص والبطاقات والأزرار.</p>
+            <div class="color-preview-card">
+              بطاقة تجريبية
+              <button type="button" class="color-preview-button">زر تجريبي</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button-primary" type="button" id="saveColorsBtn">
+            حفظ الألوان
+          </button>
+
+          <button class="button button-soft" type="button" id="resetColorsBtn">
+            استعادة الألوان الافتراضية
+          </button>
+        </div>
+
+        <p class="form-error" id="colorsMessage"></p>
+      </div>
     </section>
 
     <section class="admin-panel">
@@ -75,12 +137,15 @@
       <h2 id="editorTitle">إضافة سكربت جديد</h2>
       <form id="scriptForm" class="script-form">
         <input type="hidden" id="scriptId">
+
         <label>اسم السكربت
           <input id="scriptName" maxlength="90" required placeholder="مثال: اسم السكربت">
         </label>
+
         <label>كود السكربت
           <textarea id="scriptCode" required rows="12" maxlength="50000" dir="ltr" spellcheck="false" placeholder="الصق كود السكربت هنا..."></textarea>
         </label>
+
         <div class="form-actions">
           <button class="button button-primary" type="submit" id="saveBtn">إضافة السكربت</button>
           <button class="button button-soft hidden" type="button" id="cancelEdit">إلغاء التعديل</button>
@@ -96,6 +161,7 @@
         </div>
         <input class="admin-search" id="adminSearch" type="search" placeholder="ابحث في السكربتات...">
       </div>
+
       <div id="adminScripts" class="admin-list">
         <div class="empty-state">جارٍ التحميل...</div>
       </div>
