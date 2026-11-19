@@ -1,3 +1,4 @@
+
 const list = document.getElementById("adminScripts");
 const form = document.getElementById("scriptForm");
 const idInput = document.getElementById("scriptId");
@@ -9,7 +10,7 @@ const errorBox = document.getElementById("adminError");
 let scripts = [];
 
 function esc(v) {
-  return String(v).replace(/[&<>"']/g, c => ({
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
@@ -20,17 +21,35 @@ async function api(url, options = {}) {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) }
   });
   const data = await res.json().catch(() => ({}));
+
   if (res.status === 401) {
     location.href = "/";
     throw new Error("انتهت الجلسة. سجّل الدخول مجدداً.");
   }
+
   if (!res.ok) throw new Error(data.error || "حدث خطأ.");
   return data;
+}
+
+function updateStats() {
+  const total = scripts.length;
+
+  const totalCode = scripts.reduce((sum, s) => {
+    return sum + String(s.code ?? s.url ?? "").length;
+  }, 0);
+
+  const latest = scripts[0]?.name || "لا يوجد";
+
+  document.getElementById("statsTotal").textContent = total;
+  document.getElementById("statsCode").textContent =
+    totalCode.toLocaleString("ar-SA");
+  document.getElementById("statsLatest").textContent = latest;
 }
 
 async function load() {
   try {
     scripts = await api("/api/scripts");
+    updateStats();
     render();
   } catch (e) {
     errorBox.textContent = e.message;
@@ -39,9 +58,12 @@ async function load() {
 
 function render() {
   const q = search.value.trim().toLocaleLowerCase("ar");
-  const rows = scripts.filter(s => s.name.toLocaleLowerCase("ar").includes(q));
+  const rows = scripts.filter(s =>
+    String(s.name ?? "").toLocaleLowerCase("ar").includes(q)
+  );
 
-  document.getElementById("adminCount").textContent = `${scripts.length} سكربت`;
+  document.getElementById("adminCount").textContent =
+    `${scripts.length} سكربت`;
 
   list.innerHTML = rows.length ? rows.map(s => `
     <div class="admin-row">
