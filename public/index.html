@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,9 +10,9 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Delta Scripts">
-      <span class="brand-mark">D</span>
-      <span>Delta <b>Scripts</b></span>
+    <a class="brand" href="/" aria-label="الصفحة الرئيسية">
+      <span class="brand-mark" id="siteLogo">D</span>
+      <span id="siteName">Delta Scripts</span>
     </a>
     <button class="button button-outline" id="adminOpen">تسجيل دخول الأدمن</button>
   </header>
@@ -26,12 +27,18 @@
         <input id="searchInput" type="search" placeholder="اكتب اسم السكربت هنا..." autocomplete="off">
         <kbd>بحث</kbd>
       </label>
-      <div class="results-meta"><span id="resultCount">0 سكربت</span><span>تُحدّث النتائج تلقائياً</span></div>
+      <div class="results-meta">
+        <span id="resultCount">0 سكربت</span>
+        <span>تُحدّث النتائج تلقائياً</span>
+      </div>
     </section>
 
     <section class="catalog-section">
       <div class="section-heading">
-        <div><span class="eyebrow">المكتبة</span><h2>السكربتات المتاحة</h2></div>
+        <div>
+          <span class="eyebrow">المكتبة</span>
+          <h2>السكربتات المتاحة</h2>
+        </div>
       </div>
       <div id="scriptsGrid" class="scripts-grid">
         <div class="empty-state">جارٍ تحميل السكربتات...</div>
@@ -39,7 +46,11 @@
     </section>
   </main>
 
-  <footer>Delta Scripts <span>·</span> مكتبة منظمة وسهلة الاستخدام</footer>
+  <footer>
+    <span id="footerSiteName">Delta Scripts</span>
+    <span>·</span>
+    مكتبة منظمة وسهلة الاستخدام
+  </footer>
 
   <div class="modal-backdrop hidden" id="loginModal">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
@@ -49,18 +60,25 @@
       <h2 id="loginTitle">دخول الأدمن</h2>
       <p class="muted">أدخل بيانات الحساب للوصول إلى لوحة التحكم.</p>
       <form id="loginForm">
-        <label>اسم المستخدم<input name="username" required autocomplete="username" placeholder="اسم المستخدم"></label>
-        <label>كلمة المرور<input name="password" type="password" required autocomplete="current-password" placeholder="كلمة المرور"></label>
-        <label>الرمز السري<input name="pin" type="password" required inputmode="numeric" placeholder="الرمز الإضافي"></label>
+        <label>اسم المستخدم
+          <input name="username" required autocomplete="username" placeholder="اسم المستخدم">
+        </label>
+        <label>كلمة المرور
+          <input name="password" type="password" required autocomplete="current-password" placeholder="كلمة المرور">
+        </label>
+        <label>الرمز السري
+          <input name="pin" type="password" required inputmode="numeric" placeholder="الرمز الإضافي">
+        </label>
         <p class="form-error" id="loginError"></p>
         <button class="button button-primary full" type="submit">تسجيل الدخول</button>
       </form>
     </section>
   </div>
 
+  <footer class="copyright">
+    حقوق الطبع والنشر © فهد صالح المحيش
+  </footer>
+
   <script src="/app.js" defer></script>
 </body>
 </html>
-<footer class="copyright">
-  حقوق الطبع والنشر © فهد صالح المحيش
-</footer>
