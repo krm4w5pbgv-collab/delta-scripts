@@ -51,7 +51,8 @@ app.use(helmet({
     }
   }
 }));
-app.use(express.json({ limit: "20kb" }));
+
+app.use(express.json({ limit: "100kb" }));
 app.use(session({
   store: new SQLiteStore({ db: "sessions.sqlite", dir: dataDir, concurrentDB: true }),
   secret: process.env.SESSION_SECRET,
@@ -79,21 +80,25 @@ function safeEqual(a, b) {
   const bb = Buffer.from(String(b));
   return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
 }
+
 function requireAdmin(req, res, next) {
   if (req.session && req.session.isAdmin === true) return next();
   return res.status(401).json({ error: "يجب تسجيل دخول الأدمن أولاً." });
 }
-function validScript(name, url) {
-  if (typeof name !== "string" || typeof url !== "string") return false;
-  if (!name.trim() || name.trim().length > 90 || url.trim().length > 2048) return false;
-  try {
-    const parsed = new URL(url.trim());
-    return ["https:", "http:"].includes(parsed.protocol);
-  } catch { return false; }
+
+function validScript(name, code) {
+  return typeof name === "string" &&
+    typeof code === "string" &&
+    name.trim().length > 0 &&
+    name.trim().length <= 90 &&
+    code.trim().length > 0 &&
+    code.length <= 50000;
 }
 
 app.get("/api/scripts", (req, res) => {
-  const rows = db.prepare("SELECT id, name, url FROM scripts ORDER BY id DESC").all();
+  const rows = db.prepare(
+    "SELECT id, name, url AS code FROM scripts ORDER BY id DESC"
+  ).all();
   res.json(rows);
 });
 
@@ -125,18 +130,26 @@ app.get("/api/admin/status", (req, res) => {
 });
 
 app.post("/api/scripts", requireAdmin, (req, res) => {
-  const { name, url } = req.body || {};
-  if (!validScript(name, url)) return res.status(400).json({ error: "تحقق من الاسم والرابط. الروابط المقبولة تبدأ بـ http أو https." });
-  const info = db.prepare("INSERT INTO scripts (name, url) VALUES (?, ?)").run(name.trim(), url.trim());
-  res.status(201).json(db.prepare("SELECT id, name, url FROM scripts WHERE id = ?").get(info.lastInsertRowid));
+  const { name, code } = req.body || {};
+  if (!validScript(name, code)) {
+    return res.status(400).json({ error: "تحقق من الاسم والكود. الحد الأقصى للكود 50000 حرف." });
+  }
+  const info = db.prepare("INSERT INTO scripts (name, url) VALUES (?, ?)")
+    .run(name.trim(), code);
+  res.status(201).json(
+    db.prepare("SELECT id, name, url AS code FROM scripts WHERE id = ?")
+      .get(info.lastInsertRowid)
+  );
 });
 
 app.put("/api/scripts/:id", requireAdmin, (req, res) => {
   const id = Number(req.params.id);
-  const { name, url } = req.body || {};
-  if (!Number.isInteger(id) || id < 1 || !validScript(name, url))
+  const { name, code } = req.body || {};
+  if (!Number.isInteger(id) || id < 1 || !validScript(name, code)) {
     return res.status(400).json({ error: "البيانات غير صحيحة." });
-  const result = db.prepare("UPDATE scripts SET name = ?, url = ? WHERE id = ?").run(name.trim(), url.trim(), id);
+  }
+  const result = db.prepare("UPDATE scripts SET name = ?, url = ? WHERE id = ?")
+    .run(name.trim(), code, id);
   if (!result.changes) return res.status(404).json({ error: "السكربت غير موجود." });
   res.json({ ok: true });
 });
@@ -150,6 +163,7 @@ app.delete("/api/scripts/:id", requireAdmin, (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "حدث خطأ داخلي في الخادم." });
