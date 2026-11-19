@@ -13,18 +13,47 @@ const siteLogoInput = document.getElementById("siteLogoInput");
 const settingsMessage = document.getElementById("settingsMessage");
 const logoPreview = document.getElementById("logoPreview");
 
+const colorInputs = {
+  background: document.getElementById("colorBackground"),
+  card: document.getElementById("colorCard"),
+  button: document.getElementById("colorButton"),
+  text: document.getElementById("colorText"),
+  topbar: document.getElementById("colorTopbar")
+};
+
+const colorsMessage = document.getElementById("colorsMessage");
+const colorLivePreview = document.getElementById("colorLivePreview");
+const saveColorsBtn = document.getElementById("saveColorsBtn");
+const resetColorsBtn = document.getElementById("resetColorsBtn");
+
+const DEFAULT_COLORS = {
+  background: "#f6fbff",
+  card: "#ffffff",
+  button: "#78c8f4",
+  text: "#172638",
+  topbar: "#ffffff"
+};
+
 let scripts = [];
+let currentColors = { ...DEFAULT_COLORS };
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   }[c]));
 }
 
 async function api(url, options = {}) {
   const res = await fetch(url, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
   });
 
   const data = await res.json().catch(() => ({}));
@@ -35,6 +64,7 @@ async function api(url, options = {}) {
   }
 
   if (!res.ok) throw new Error(data.error || "حدث خطأ.");
+
   return data;
 }
 
@@ -45,14 +75,64 @@ function showLogo(element, url, fallback = "D") {
     const img = document.createElement("img");
     img.src = url;
     img.alt = "شعار الموقع";
+
     img.onerror = () => {
       element.textContent = fallback;
     };
+
     element.appendChild(img);
   } else {
     element.textContent = fallback;
   }
 }
+
+// تحديث معاينة الألوان
+function previewColors(colors) {
+  colorLivePreview.style.backgroundColor = colors.background;
+  colorLivePreview.style.color = colors.text;
+
+  const topbar = colorLivePreview.querySelector(".color-preview-topbar");
+  const card = colorLivePreview.querySelector(".color-preview-card");
+  const button = colorLivePreview.querySelector(".color-preview-button");
+
+  topbar.style.backgroundColor = colors.topbar;
+  topbar.style.color = colors.text;
+
+  card.style.backgroundColor = colors.card;
+  card.style.color = colors.text;
+
+  button.style.backgroundColor = colors.button;
+  button.style.color = colors.text;
+}
+
+// قراءة الألوان من أدوات الاختيار
+function readColors() {
+  return {
+    background: colorInputs.background.value,
+    card: colorInputs.card.value,
+    button: colorInputs.button.value,
+    text: colorInputs.text.value,
+    topbar: colorInputs.topbar.value
+  };
+}
+
+// عرض الألوان في أدوات الاختيار
+function setColorInputs(colors) {
+  for (const key of Object.keys(DEFAULT_COLORS)) {
+    colorInputs[key].value = colors[key] || DEFAULT_COLORS[key];
+  }
+
+  currentColors = { ...colors };
+  previewColors(currentColors);
+}
+
+// معاينة مباشرة عند تغيير أي لون
+Object.values(colorInputs).forEach(input => {
+  input.addEventListener("input", () => {
+    previewColors(readColors());
+    colorsMessage.textContent = "";
+  });
+});
 
 async function loadSettings() {
   try {
@@ -64,10 +144,16 @@ async function loadSettings() {
     document.getElementById("adminSiteName").textContent =
       settings.siteName || "Delta Scripts";
 
-    document.title = `لوحة التحكم | ${settings.siteName || "Delta Scripts"}`;
+    document.title =
+      `لوحة التحكم | ${settings.siteName || "Delta Scripts"}`;
 
     showLogo(document.getElementById("adminLogo"), settings.logo, "D");
     showLogo(logoPreview, settings.logo, "D");
+
+    setColorInputs({
+      ...DEFAULT_COLORS,
+      ...(settings.colors || {})
+    });
   } catch (e) {
     settingsMessage.textContent = e.message;
   }
@@ -85,6 +171,7 @@ siteLogoInput.addEventListener("input", () => {
 
 settingsForm.addEventListener("submit", async e => {
   e.preventDefault();
+
   settingsMessage.textContent = "جارٍ حفظ الإعدادات...";
 
   try {
@@ -92,19 +179,76 @@ settingsForm.addEventListener("submit", async e => {
       method: "PUT",
       body: JSON.stringify({
         siteName: siteNameInput.value.trim(),
-        logo: siteLogoInput.value.trim()
+        logo: siteLogoInput.value.trim(),
+        colors: readColors()
       })
     });
 
-    document.getElementById("adminSiteName").textContent = settings.siteName;
+    document.getElementById("adminSiteName").textContent =
+      settings.siteName;
+
     document.title = `لوحة التحكم | ${settings.siteName}`;
 
     showLogo(document.getElementById("adminLogo"), settings.logo, "D");
     showLogo(logoPreview, settings.logo, "D");
 
+    if (settings.colors) {
+      setColorInputs(settings.colors);
+    }
+
     settingsMessage.textContent = "تم حفظ الإعدادات بنجاح ✓";
   } catch (e) {
     settingsMessage.textContent = e.message;
+  }
+});
+
+// حفظ الألوان
+saveColorsBtn.addEventListener("click", async () => {
+  colorsMessage.textContent = "جارٍ حفظ الألوان...";
+
+  try {
+    await api("/api/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        siteName: siteNameInput.value.trim(),
+        logo: siteLogoInput.value.trim(),
+        colors: readColors()
+      })
+    });
+
+    currentColors = readColors();
+    colorsMessage.textContent = "تم حفظ الألوان بنجاح ✓";
+  } catch (e) {
+    colorsMessage.textContent = e.message;
+  }
+});
+
+// استعادة الألوان الافتراضية وحفظها
+resetColorsBtn.addEventListener("click", async () => {
+  const confirmed = confirm(
+    "هل تريد استعادة الألوان الافتراضية للموقع؟"
+  );
+
+  if (!confirmed) return;
+
+  colorsMessage.textContent = "جارٍ استعادة الألوان...";
+
+  try {
+    await api("/api/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        siteName: siteNameInput.value.trim(),
+        logo: siteLogoInput.value.trim(),
+        colors: DEFAULT_COLORS
+      })
+    });
+
+    setColorInputs(DEFAULT_COLORS);
+
+    colorsMessage.textContent =
+      "تمت استعادة الألوان الافتراضية وحفظها ✓";
+  } catch (e) {
+    colorsMessage.textContent = e.message;
   }
 });
 
@@ -118,8 +262,10 @@ function updateStats() {
   const latest = scripts[0]?.name || "لا يوجد";
 
   document.getElementById("statsTotal").textContent = total;
+
   document.getElementById("statsCode").textContent =
     totalCode.toLocaleString("ar-SA");
+
   document.getElementById("statsLatest").textContent = latest;
 }
 
@@ -135,6 +281,7 @@ async function load() {
 
 function render() {
   const q = search.value.trim().toLocaleLowerCase("ar");
+
   const rows = scripts.filter(s =>
     String(s.name ?? "").toLocaleLowerCase("ar").includes(q)
   );
@@ -160,8 +307,13 @@ function render() {
 function resetForm() {
   form.reset();
   idInput.value = "";
-  document.getElementById("editorTitle").textContent = "إضافة سكربت جديد";
-  document.getElementById("saveBtn").textContent = "إضافة السكربت";
+
+  document.getElementById("editorTitle").textContent =
+    "إضافة سكربت جديد";
+
+  document.getElementById("saveBtn").textContent =
+    "إضافة السكربت";
+
   document.getElementById("cancelEdit").classList.add("hidden");
 }
 
@@ -206,8 +358,12 @@ list.addEventListener("click", async e => {
     nameInput.value = s.name;
     codeInput.value = s.code ?? s.url ?? "";
 
-    document.getElementById("editorTitle").textContent = "تعديل السكربت";
-    document.getElementById("saveBtn").textContent = "حفظ التعديلات";
+    document.getElementById("editorTitle").textContent =
+      "تعديل السكربت";
+
+    document.getElementById("saveBtn").textContent =
+      "حفظ التعديلات";
+
     document.getElementById("cancelEdit").classList.remove("hidden");
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -220,7 +376,10 @@ list.addEventListener("click", async e => {
     if (!confirm(`هل تريد حذف "${s.name}"؟`)) return;
 
     try {
-      await api(`/api/scripts/${s.id}`, { method: "DELETE" });
+      await api(`/api/scripts/${s.id}`, {
+        method: "DELETE"
+      });
+
       await load();
     } catch (err) {
       errorBox.textContent = err.message;
@@ -229,6 +388,7 @@ list.addEventListener("click", async e => {
 });
 
 document.getElementById("cancelEdit").addEventListener("click", resetForm);
+
 search.addEventListener("input", render);
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
