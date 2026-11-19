@@ -10,7 +10,10 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/"><span class="brand-mark">D</span><span>Delta <b>Scripts</b></span></a>
+    <a class="brand" href="/">
+      <span class="brand-mark" id="adminLogo">D</span>
+      <span id="adminSiteName">Delta <b>Scripts</b></span>
+    </a>
     <div class="top-actions">
       <span class="admin-chip">لوحة الأدمن</span>
       <button class="button button-outline" id="logoutBtn">تسجيل الخروج</button>
@@ -22,10 +25,33 @@
       <div>
         <span class="eyebrow">مركز الإدارة</span>
         <h1>لوحة التحكم</h1>
-        <p class="muted">إدارة ومتابعة مكتبة Delta Scripts</p>
+        <p class="muted">إدارة ومتابعة مكتبة الموقع</p>
       </div>
       <a class="button button-outline" href="/">عرض الموقع</a>
     </div>
+
+    <section class="admin-panel">
+      <h2>إعدادات الموقع</h2>
+      <form id="settingsForm" class="script-form settings-form">
+        <label>اسم الموقع الجديد
+          <input id="siteNameInput" maxlength="50" required placeholder="اكتب اسم الموقع">
+        </label>
+
+        <label>رابط شعار الموقع
+          <input id="siteLogoInput" type="url" placeholder="https://example.com/logo.png">
+        </label>
+
+        <div class="logo-preview-wrap">
+          <span>معاينة الشعار</span>
+          <div id="logoPreview" class="logo-preview">D</div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button-primary" type="submit">حفظ الإعدادات</button>
+        </div>
+        <p class="form-error" id="settingsMessage"></p>
+      </form>
+    </section>
 
     <section class="admin-panel">
       <h2>نظرة عامة</h2>
