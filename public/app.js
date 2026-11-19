@@ -3,6 +3,7 @@ const grid = document.getElementById("scriptsGrid");
 const searchInput = document.getElementById("searchInput");
 const count = document.getElementById("resultCount");
 const modal = document.getElementById("loginModal");
+
 let scripts = [];
 
 function escapeHtml(value) {
@@ -15,8 +16,47 @@ function escapeHtml(value) {
   }[c]));
 }
 
+function showLogo(element, url, fallback = "D") {
+  if (!element) return;
+
+  element.replaceChildren();
+
+  if (url) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "شعار الموقع";
+    img.onerror = () => {
+      element.textContent = fallback;
+    };
+    element.appendChild(img);
+  } else {
+    element.textContent = fallback;
+  }
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) throw new Error("فشل تحميل الإعدادات");
+
+    const settings = await res.json();
+    const siteName = settings.siteName || "Delta Scripts";
+
+    const brandName = document.getElementById("siteName");
+    if (brandName) brandName.textContent = siteName;
+
+    const brandLogo = document.getElementById("siteLogo");
+    showLogo(brandLogo, settings.logo, "D");
+
+    document.title = siteName;
+  } catch (error) {
+    console.error("تعذّر تحميل إعدادات الموقع:", error);
+  }
+}
+
 function render() {
   const q = searchInput.value.trim().toLocaleLowerCase("ar");
+
   const filtered = scripts.filter(s =>
     String(s.name ?? "").toLocaleLowerCase("ar").includes(q)
   );
@@ -43,6 +83,7 @@ async function loadScripts() {
   try {
     const res = await fetch("/api/scripts");
     if (!res.ok) throw new Error("فشل التحميل");
+
     scripts = await res.json();
     render();
   } catch {
@@ -73,8 +114,13 @@ grid.addEventListener("click", async e => {
 
 searchInput.addEventListener("input", render);
 
-document.getElementById("adminOpen").addEventListener("click", () => modal.classList.remove("hidden"));
-document.getElementById("loginClose").addEventListener("click", () => modal.classList.add("hidden"));
+document.getElementById("adminOpen").addEventListener("click", () => {
+  modal.classList.remove("hidden");
+});
+
+document.getElementById("loginClose").addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
 
 modal.addEventListener("click", e => {
   if (e.target === modal) modal.classList.add("hidden");
@@ -82,28 +128,34 @@ modal.addEventListener("click", e => {
 
 document.getElementById("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
+
   const form = new FormData(e.currentTarget);
   const error = document.getElementById("loginError");
   error.textContent = "";
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: form.get("username"),
-      password: form.get("password"),
-      pin: form.get("pin")
-    })
-  });
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: form.get("username"),
+        password: form.get("password"),
+        pin: form.get("pin")
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    error.textContent = data.error || "تعذّر تسجيل الدخول.";
-    return;
+    if (!res.ok) {
+      error.textContent = data.error || "تعذّر تسجيل الدخول.";
+      return;
+    }
+
+    location.href = "/admin.html";
+  } catch {
+    error.textContent = "تعذّر الاتصال بالخادم.";
   }
-
-  location.href = "/admin.html";
 });
 
+loadSettings();
 loadScripts();
